@@ -1,0 +1,19 @@
+{
+  "name": "bottle-detection",
+  "video": "bottle-detection.mp4",
+  "width": 640,
+  "height": 360,
+  "fps": 29.833333,
+  "frame_count": 1189,
+  "duration_seconds": 39.854749,
+  "source": "/Users/sayansen/Downloads/bottle-detection.mp4",
+  "notes": "Simple scene with three bottles picked up at intervals, causing target motion and reappearance across the frame.",
+  "roi": {
+    "x": 278,
+    "y": 104,
+    "width": 77,
+    "height": 215
+  },
+  "reference_frame": 0,
+  "difficulty_tags": ["moving_object", "reappearing_object", "simple_background"]
+}

@@ -1,0 +1,51 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Local environments
+.env
+.env.*
+!.env.example
+.venv/
+venv/
+
+# OS/editor noise
+.DS_Store
+.idea/
+.vscode/
+
+# Generated outputs and caches
+outputs/
+eval_outputs/
+mask_cache/
+vector_db/
+internal_docs/
+*.log
+
+# Videos and generated media
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.webm
+*.zip
+*.docx
+
+# Model repos, weights, and checkpoints
+models/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+*.safetensors
+
+# Notebook runtime state
+.ipynb_checkpoints/
+
+# Public extract is generated from the real project; publish either root or this
+# extract intentionally, not both by accident.
+public_github_release/

@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Video Object Removal Prototype</title>
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell">
+      <section class="workspace" aria-label="Video object removal workspace">
+        <div class="topbar">
+          <div>
+            <p class="eyebrow">Generalized Prototype</p>
+            <h1>Video Object Removal</h1>
+          </div>
+          <div class="status-pill" id="serverStatus">Checking server</div>
+        </div>
+
+        <div class="tool-grid">
+          <section class="preview-panel" aria-label="Video preview">
+            <div class="preview-workbench">
+              <div class="preview-stage" id="previewStage">
+                <video id="videoPreview" controls muted playsinline></video>
+                <img id="framePreview" class="frame-preview hidden" alt="Selected reference frame" />
+                <canvas id="roiCanvas" aria-label="Draw target region"></canvas>
+                <div class="empty-state" id="emptyState">Load a video to begin</div>
+              </div>
+              <div class="frame-browser hidden" id="frameBrowser" aria-label="Extracted video frames">
+                <div class="frame-browser-header">
+                  <strong>Frames</strong>
+                  <span id="frameStatus">Waiting</span>
+                </div>
+                <div class="frame-list" id="frameList"></div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="control-panel" aria-label="Processing controls">
+            <label class="field">
+              <span>Video file</span>
+              <input id="videoFile" type="file" accept="video/*" />
+            </label>
+
+            <div class="roi-grid" aria-label="Selected region values">
+              <label class="field compact">
+                <span>X</span>
+                <input id="roiX" type="number" min="0" value="0" />
+              </label>
+              <label class="field compact">
+                <span>Y</span>
+                <input id="roiY" type="number" min="0" value="0" />
+              </label>
+              <label class="field compact">
+                <span>Width</span>
+                <input id="roiWidth" type="number" min="1" value="1" />
+              </label>
+              <label class="field compact">
+                <span>Height</span>
+                <input id="roiHeight" type="number" min="1" value="1" />
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <label class="field">
+                <span>Pipeline</span>
+                <select id="pipelineMode">
+                  <option value="legacy">Fast Inpaint</option>
+                  <option value="void" selected>SAM2 + VOID</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Removal mode</span>
+                <select id="removalMode">
+                  <option value="ai_human_crowded">Crowded Human</option>
+                  <option value="ai_object" selected>Moving Object</option>
+                  <option value="ai_text_or_logo">Text/Logo</option>
+                  <option value="static_rectangle">Static Area</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Reference frame</span>
+                <input id="referenceFrame" type="number" min="0" value="0" />
+              </label>
+            </div>
+
+            <div class="settings-row void-settings">
+              <label class="field">
+                <span>Tracker</span>
+                <select id="sam2TrackingBackend">
+                  <option value="samurai" selected>SAMURAI</option>
+                  <option value="global">SAM2 Global</option>
+                  <option value="dam4sam">DAM4SAM</option>
+                  <option value="sam2long_research">SAM2Long</option>
+                  <option value="auto">Auto</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>VOID profile</span>
+                <select id="resourceProfile">
+                  <option value="l4_pro_balanced" selected>L4 Balanced</option>
+                  <option value="t4_highram_qfloat8">T4 QFloat8</option>
+                  <option value="t4_highram_safe">T4 Safe</option>
+                  <option value="l4_pro_long_lowres">L4 Long</option>
+                  <option value="a100_quality">A100 Quality</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Restore</span>
+                <select id="qualityRestoration">
+                  <option value="ffmpeg_bicubic">FFmpeg Bicubic</option>
+                  <option value="venhancer">VEnhancer</option>
+                  <option value="realesrgan" selected>Real-ESRGAN</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Affected regions</span>
+                <select id="vlmProvider">
+                  <option value="ollama" selected>Ollama VLM</option>
+                  <option value="heuristic">Heuristic</option>
+                  <option value="none">None</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <label class="field">
+                <span>Inpaint engine</span>
+                <select id="inpaintEngine">
+                  <option value="opencv" selected>Fast OpenCV</option>
+                  <option value="lama">AI LaMa</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>OpenCV method</span>
+                <select id="method">
+                  <option value="telea">TELEA</option>
+                  <option value="ns">Navier-Stokes</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="settings-row">
+              <label class="field">
+                <span>Chunk size</span>
+                <input id="chunkSize" type="number" min="1" value="30" />
+              </label>
+              <label class="field">
+                <span>Radius</span>
+                <input id="radius" type="number" min="0.1" step="0.1" value="3" />
+              </label>
+              <label class="field">
+                <span>Mask padding</span>
+                <input id="maskPadding" type="number" min="0" value="2" />
+              </label>
+            </div>
+
+            <div class="settings-row void-settings">
+              <label class="field check-field">
+                <input id="sam2Bidirectional" type="checkbox" checked />
+                <span>Bidirectional masks</span>
+              </label>
+              <label class="field check-field">
+                <input id="runVoidPass" type="checkbox" />
+                <span>Run VOID pass</span>
+              </label>
+            </div>
+
+            <div class="settings-row void-settings">
+              <label class="field">
+                <span>VOID dilation</span>
+                <input id="voidShadowDilation" type="number" min="0" value="0" />
+              </label>
+              <label class="field">
+                <span>Contact dilation</span>
+                <input id="heuristicContactDilation" type="number" min="0" value="10" />
+              </label>
+            </div>
+
+            <div class="settings-row void-settings">
+              <label class="field">
+                <span>Shadow dilation</span>
+                <input id="heuristicShadowDilation" type="number" min="0" value="30" />
+              </label>
+              <label class="field">
+                <span>Shadow offset</span>
+                <input id="heuristicShadowOffset" type="number" min="0" value="16" />
+              </label>
+            </div>
+
+            <div class="settings-row void-settings">
+              <label class="field">
+                <span>Max chunks</span>
+                <input id="maxChunks" type="number" min="1" placeholder="All" />
+              </label>
+            </div>
+
+            <button class="primary-action" id="processButton" type="button">
+              Process Video
+            </button>
+
+            <div class="progress-block" aria-label="Processing progress">
+              <div class="progress-copy">
+                <span id="progressLabel">Waiting</span>
+                <span id="progressCount">0%</span>
+              </div>
+              <div class="progress-track">
+                <div class="progress-fill" id="progressFill"></div>
+              </div>
+            </div>
+
+            <a class="download-link hidden" id="downloadLink" href="#">Download Output</a>
+
+            <div class="log-box" aria-label="Processing logs">
+              <div class="log-header">
+                <strong>Logs</strong>
+                <span id="logCount">0</span>
+              </div>
+              <div class="log-list" id="logList">Waiting for job logs.</div>
+            </div>
+
+            <div class="error-box" id="errorBox" role="alert" aria-live="polite">
+              <strong>Error</strong>
+              <p id="errorMessage">No errors yet.</p>
+            </div>
+          </aside>
+        </div>
+      </section>
+    </main>
+
+    <script src="/static/app.js"></script>
+  </body>
+</html>
